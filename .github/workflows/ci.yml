@@ -35,14 +35,14 @@ jobs:
         run: |
           uv venv
           uv pip install pyinstaller
-          uv pip install -r ./src/requirements.txt
+          uv pip install -r src/requirements.txt
 
       - name: Build Executable
         uses: sayyid5416/pyinstaller@v1
         with:
           python_ver: '3.13'
           spec: 'src/main.spec'
-          requirements: src/requirements.txt'
+          requirements: src/requirements.txt
           upload_exe_with_name: 'NetPeek'
           options: --clean, --noconsole, --onefile, --name "NetPeek"
 
