@@ -31,6 +31,11 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
+      - name: Read version from pyproject.toml
+        id: read_version
+        run: |
+          echo "VERSION=$(grep '^version' pyproject.toml | head -1 | cut -d '\"' -f2)" >> $GITHUB_ENV
+
       - name: Install project dependencies
         run: |
           uv venv
@@ -49,5 +54,19 @@ jobs:
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NetPeek-${{ github.run_number }}
+          name: NetPeek-v${{ env.VERSION }}
           path: dist/NetPeek.exe
+          overwrite: true
+          retention-days: 1
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: NetPeek v${{ env.VERSION }}
+          files: dist/NetPeek.exe
+          draft: false
+          prerelease: false
