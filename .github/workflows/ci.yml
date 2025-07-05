@@ -37,9 +37,13 @@ jobs:
           uv pip install pyinstaller
           uv pip install -r requirements.txt
 
-      - name: Build .exe with PyInstaller
-        run: |
-          uv run python -m pyinstaller --clean --noconsole --onefile main.py
+      - name: PyInstaller Windows
+        uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
+        with:
+          path: ./
+#      - name: Build .exe with PyInstaller
+#        run: |
+#          pyinstaller --clean --noconsole --onefile main.py
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
