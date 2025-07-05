@@ -129,4 +129,4 @@ dist
 .env
 poetry.lock
 
-main.spec
+src/main.spec

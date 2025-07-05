@@ -1,0 +1,86 @@
+name: NetPeek Builder
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  checks: write
+
+  actions: read
+  issues: read
+  packages: write
+  pull-requests: read
+  repository-projects: read
+  statuses: read
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+        python-version: [ "3.13" ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Extract version from pyproject.toml
+        shell: pwsh
+        run: |
+          $content = Get-Content pyproject.toml
+          $versionLine = $content | Where-Object { $_ -match '^\s*version\s*=' }
+          $version = ($versionLine -split '"')[1]
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Install project dependencies
+        run: |
+          uv venv
+          uv pip install pyinstaller
+          uv pip install -r src/requirements.txt
+
+      - name: Build Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: '3.13'
+          spec: 'src/main.py'
+          requirements: src/requirements.txt
+          upload_exe_with_name: 'NetPeek'
+          options: --clean, --noconsole, --onefile, --name "NetPeek"
+
+      - name: Upload .exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetPeek-v${{ env.VERSION }}
+          path: dist/NetPeek.exe
+          overwrite: true
+          retention-days: 1
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: NetPeek v${{ env.VERSION }}
+          files: dist/NetPeek.exe
+          draft: false
+          prerelease: false
