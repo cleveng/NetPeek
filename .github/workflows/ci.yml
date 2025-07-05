@@ -39,7 +39,7 @@ jobs:
 
       - name: Build .exe with PyInstaller
         run: |
-          python -m pyinstaller --clean --noconsole --onefile main.py
+          uv run python -m pyinstaller --clean --noconsole --onefile main.py
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
