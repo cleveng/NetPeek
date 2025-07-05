@@ -31,10 +31,13 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
-      - name: Read version from pyproject.toml
-        id: read_version
+      - name: Extract version from pyproject.toml
+        shell: pwsh
         run: |
-          echo "VERSION=$(grep '^version' pyproject.toml | head -1 | cut -d '\"' -f2)" >> $GITHUB_ENV
+          $content = Get-Content pyproject.toml
+          $versionLine = $content | Where-Object { $_ -match '^\s*version\s*=' }
+          $version = ($versionLine -split '"')[1]
+          echo "VERSION=$version" >> $env:GITHUB_ENV
 
       - name: Install project dependencies
         run: |
