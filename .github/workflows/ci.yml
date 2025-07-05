@@ -42,9 +42,9 @@ jobs:
         with:
           python_ver: '3.13'
           spec: 'src/main.spec'
-          requirements: ./requirements.txt'
+          requirements: .\requirements.txt'
           upload_exe_with_name: 'NetPeek'
-          options: --onefile, --name "NetPeek", --windowed,
+          options: --clean, --noconsole, --onefile, --name "NetPeek", --windowed,
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
