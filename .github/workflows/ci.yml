@@ -49,5 +49,5 @@ jobs:
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NetPeek
+          name: NetPeek-${{ github.run_number }}
           path: dist/NetPeek.exe
