@@ -18,3 +18,7 @@ uv run main.py
 uv pip install pyinstaller
 pyinstaller --clean --noconsole --onefile main.py
 ```
+
+## 本地网络信息查询器
+
+![Logo](images/preview.jpg)
