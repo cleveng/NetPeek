@@ -11,9 +11,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ windows-latest ]
         python-version: [ "3.13" ]
-        poetry-version: [ "latest" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +39,7 @@ jobs:
 
       - name: Build .exe with PyInstaller
         run: |
-          pyinstaller --clean --noconsole --onefile main.py
+          python -m pyinstaller --clean --noconsole --onefile main.py
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
