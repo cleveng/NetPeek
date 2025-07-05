@@ -35,12 +35,12 @@ jobs:
       - name: Install project dependencies
         run: |
           uv venv
-          uv pip install -r requirements.txt
           uv pip install pyinstaller
+          uv pip install -r requirements.txt
 
       - name: Build .exe with PyInstaller
         run: |
-          pyinstaller --noconsole --onefile main.py
+          pyinstaller --clean --noconsole --onefile main.py
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
