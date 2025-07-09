@@ -11,6 +11,10 @@ import pyperclip
 import tomllib
 import requests
 from tkinter import messagebox
+import webbrowser
+
+def open_url():
+  webbrowser.open("https://github.com/cleveng/NetPeek")
 
 # 获取公网ip
 def get_public_ip():
@@ -154,6 +158,17 @@ disk_label.pack(pady=4)
 virtual_mem = psutil.virtual_memory().total
 total_memory_gb = round(virtual_mem / (1024 ** 3))  # 四舍五入为整数 GB
 memory_label.configure(text=f"🧠 内存容量: {total_memory_gb} GB")
+
+link_button = ctk.CTkButton(
+  app,
+  text="🔗 项目地址",
+  text_color="blue",
+  fg_color="transparent",
+  hover_color="#eeeeee",
+  cursor="hand2",
+  command=open_url
+)
+link_button.pack(pady=10)
 
 # 获取磁盘信息
 disk_text_lines = []
