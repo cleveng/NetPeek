@@ -30,6 +30,14 @@ def get_app_metadata():
     messagebox.showwarning("读取失败", f"读取 pyproject.toml 失败：\n{e}")
     return "本地网络信息查询器"
 
+def get_os_info():
+  if platform.system() == "Windows":
+    version, _, build, _ = platform.win32_ver()
+    return f"Windows {version} (Build {build})"
+  else:
+    # Linux/macOS fallback
+    return f"{platform.system()} {platform.release()}"
+
 def get_local_ip():
     for interface, snics in psutil.net_if_addrs().items():
         for snic in snics:
@@ -47,11 +55,11 @@ def refresh_info():
     global current_ip, current_mac
     current_ip = get_local_ip()
     current_mac = get_mac_address()
-    os = platform.system()
+    os_info = get_os_info()
 
     ip_label.configure(text=f"🌐 内网 IP: {current_ip}")
     mac_label.configure(text=f"🔑 MAC 地址: {current_mac}")
-    os_label.configure(text=f"🖥️ 操作系统: {os}")
+    os_label.configure(text=f"🖥️ 操作系统: {os_info}")
 
 def copy_mac():
     if current_mac and "无效" not in current_mac:
