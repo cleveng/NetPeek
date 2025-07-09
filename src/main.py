@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 import customtkinter as ctk
 import socket
@@ -8,7 +9,32 @@ import psutil
 import platform
 import pyperclip
 import tomllib
+import requests
 from tkinter import messagebox
+
+# 获取公网ip
+def get_public_ip():
+  proxies = {
+    "http": os.environ.get('HTTP_PROXY'),
+    "https": os.environ.get('HTTPS_PROXY')
+  }
+  try:
+    r = requests.get("https://api.ipify.org", proxies=proxies, timeout=5)
+    r.raise_for_status()
+    return r.text
+  except Exception as e:
+    print(f"获取公网 IP 失败: {e}")
+    return "获取失败"
+
+def update_public_ip_label():
+  public_label.configure(text="📡 公网 IP: 正在获取...")
+
+  def worker():
+    ip = get_public_ip()
+    # 回到主线程更新 UI
+    public_label.after(0, lambda: public_label.configure(text=f"📡 公网 IP: {ip}"))
+
+  threading.Thread(target=worker, daemon=True).start()
 
 def get_app_metadata():
   try:
@@ -60,11 +86,14 @@ def get_mac_address():
     return ':'.join(f'{(mac >> i) & 0xff:02x}' for i in range(40, -1, -8)).upper()
 
 def refresh_info():
+    # 获取公网ip地址
+    update_public_ip_label()
+
     global current_ip, current_mac
     current_ip = get_local_ip()
-    current_ipv6 = get_local_ipv6()
     current_mac = get_mac_address()
     os_info = get_os_info()
+    current_ipv6 = get_local_ipv6()
 
     ip_label.configure(text=f"🌐 内网 IP: {current_ip}")
     mac_label.configure(text=f"🔑 MAC 地址: {current_mac}")
@@ -96,6 +125,10 @@ title_label.pack(pady=12)
 # 操作系统
 os_label = ctk.CTkLabel(app, text="")
 os_label.pack(pady=4)
+
+# 公网 IP
+public_label = ctk.CTkLabel(app, text="")
+public_label.pack(pady=4)
 
 # 局域网地址
 ip_label = ctk.CTkLabel(app, text="")
