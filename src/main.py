@@ -45,6 +45,14 @@ def get_local_ip():
                 return snic.address
     return "无法获取 IP"
 
+def get_local_ipv6():
+  for interface, snics in psutil.net_if_addrs().items():
+    for snic in snics:
+      if snic.family == socket.AF_INET6 and not snic.address.startswith("::1"):
+        # 去掉 scope_id (%xxxx) 部分（如 fe80::xxxx%eth0）
+        return snic.address.split('%')[0]
+  return "-"
+
 def get_mac_address():
     mac = uuid.getnode()
     if (mac >> 40) % 2:
@@ -54,12 +62,14 @@ def get_mac_address():
 def refresh_info():
     global current_ip, current_mac
     current_ip = get_local_ip()
+    current_ipv6 = get_local_ipv6()
     current_mac = get_mac_address()
     os_info = get_os_info()
 
     ip_label.configure(text=f"🌐 内网 IP: {current_ip}")
     mac_label.configure(text=f"🔑 MAC 地址: {current_mac}")
     os_label.configure(text=f"🖥️ 操作系统: {os_info}")
+    ipv6_label.configure(text=f"🌀 内网 IPv6: {current_ipv6}")
 
 def copy_mac():
     if current_mac and "无效" not in current_mac:
@@ -90,6 +100,10 @@ os_label.pack(pady=4)
 # 局域网地址
 ip_label = ctk.CTkLabel(app, text="")
 ip_label.pack(pady=4)
+
+# ⬅️ 新增 IPv6 标签
+ipv6_label = ctk.CTkLabel(app, text="")
+ipv6_label.pack(pady=4)
 
 # mac地址
 mac_label = ctk.CTkLabel(app, text="")
