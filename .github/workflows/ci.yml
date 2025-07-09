@@ -65,11 +65,16 @@ jobs:
           upload_exe_with_name: 'NetPeek'
           options: --clean, --add-data "pyproject.toml;.", --noconsole, --onefile, --name "NetPeek"
 
+      - name: Rename .exe on Windows
+        shell: pwsh
+        run: |
+          Rename-Item -Path dist/NetPeek.exe -NewName "NetPeek_${{ env.VERSION_NAME }}.exe"
+
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NetPeek-v${{ env.VERSION }}
-          path: dist/NetPeek.exe
+          name: NetPeek_v${{ env.VERSION }}
+          path: dist/NetPeek_${{ env.VERSION_NAME }}.exe
           overwrite: true
           retention-days: 1
 
