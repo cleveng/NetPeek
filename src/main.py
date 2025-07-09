@@ -7,7 +7,7 @@ import uuid
 import psutil
 import platform
 import pyperclip
-import tomli as tomllib
+import tomllib
 from tkinter import messagebox
 
 def get_app_metadata():
