@@ -1,11 +1,34 @@
+import os
+import sys
+
 import customtkinter as ctk
 import socket
 import uuid
 import psutil
 import platform
 import pyperclip
+import tomli as tomllib
 from tkinter import messagebox
 
+def get_app_metadata():
+  try:
+    # 获取当前文件所在目录（兼容 .exe）
+    if getattr(sys, 'frozen', False):  # 打包后
+      base_path = sys._MEIPASS
+    else:  # 脚本执行
+      base_path = os.path.dirname(__file__)
+
+    pyproject_path = os.path.join(base_path, "pyproject.toml")
+
+    with open(pyproject_path, "rb") as f:
+      data = tomllib.load(f)
+      name = data["project"]["name"]
+      version = data["project"]["version"]
+      return f"{name} v{version}"
+  except Exception as e:
+    from tkinter import messagebox
+    messagebox.showwarning("读取失败", f"读取 pyproject.toml 失败：\n{e}")
+    return "本地网络信息查询器"
 
 def get_local_ip():
     for interface, snics in psutil.net_if_addrs().items():
@@ -43,31 +66,62 @@ ctk.set_default_color_theme("blue")
 
 # 主窗口
 app = ctk.CTk()
-app.title("本地网络信息查询器")
-app.geometry("420x270")
+app.title(get_app_metadata())
+app.geometry("420x400")
 
 # 界面元素
 title_label = ctk.CTkLabel(app, text="📡 本地网络信息", font=("Arial", 20))
 title_label.pack(pady=12)
 
+# 操作系统
 os_label = ctk.CTkLabel(app, text="")
 os_label.pack(pady=4)
 
+# 局域网地址
 ip_label = ctk.CTkLabel(app, text="")
 ip_label.pack(pady=4)
 
+# mac地址
 mac_label = ctk.CTkLabel(app, text="")
 mac_label.pack(pady=4)
 
+# 内存大小
+memory_label = ctk.CTkLabel(app, text="")
+memory_label.pack(pady=4)
+
+# 磁盘大小
+disk_label = ctk.CTkLabel(app, text="", justify="left")
+disk_label.pack(pady=4)
+
+# 获取内存信息
+virtual_mem = psutil.virtual_memory()
+total_memory_gb = virtual_mem.total / (1024 ** 3)
+memory_label.configure(text=f"🧠 内存容量: {total_memory_gb:.2f} GB")
+
+# 获取磁盘信息
+disk_text_lines = []
+for part in psutil.disk_partitions():
+  try:
+    usage = psutil.disk_usage(part.mountpoint)
+    total_gb = usage.total / (1024 ** 3)
+    free_gb = usage.free / (1024 ** 3)
+    disk_text_lines.append(f"💾 {part.device}  {total_gb:.1f} GB / 空闲 {free_gb:.1f} GB")
+  except PermissionError:
+    continue  # 某些系统分区会拒绝访问
+
+disk_label.configure(text="\n".join(disk_text_lines))
+
 # 按钮区域
 button_frame = ctk.CTkFrame(app)
-button_frame.pack(pady=20)
+button_frame.pack(side="bottom", fill="x", pady=10, padx=10)
 
+# 刷新按钮
 refresh_button = ctk.CTkButton(button_frame, text="🔄 刷新", command=refresh_info)
-refresh_button.grid(row=0, column=0, padx=10)
+refresh_button.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
+# 复制按钮
 copy_mac_button = ctk.CTkButton(button_frame, text="📋 复制 MAC", command=copy_mac)
-copy_mac_button.grid(row=0, column=1, padx=10)
+copy_mac_button.pack(side="left", expand=True, fill="x", padx=(5, 0))
 
 # 初始化变量 & 显示内容
 current_ip = None

@@ -5,8 +5,8 @@ uv venv
 uv pip sync pyproject.toml
 
 uv pip install psutil
-uv pip freeze > requirements.txt
-uv pip install -r requirements.txt
+uv pip freeze > src/requirements.txt
+uv pip install -r src/requirements.txt
 
 uv add -r requirements.txt
 uv run main.py
@@ -16,7 +16,7 @@ uv run main.py
 
 ```bash
 uv pip install pyinstaller
-pyinstaller --clean --noconsole --onefile main.py
+pyinstaller --clean --add-data "pyproject.toml;." --noconsole --onefile ./src/main.py
 ```
 
 ## 本地网络信息查询器

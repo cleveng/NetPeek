@@ -1,7 +1,7 @@
 [project]
-name = "ipaddr"
+name = "NetPeek"
 version = "0.1.0"
-description = "Add your description here"
+description = "NetPeek 是一款轻便获取本地网卡信息，一般用于管理员管理路由，限制部分电脑上网策略。"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
