@@ -151,9 +151,9 @@ disk_label = ctk.CTkLabel(app, text="", justify="left")
 disk_label.pack(pady=4)
 
 # 获取内存信息
-virtual_mem = psutil.virtual_memory()
-total_memory_gb = virtual_mem.total / (1024 ** 3)
-memory_label.configure(text=f"🧠 内存容量: {total_memory_gb:.2f} GB")
+virtual_mem = psutil.virtual_memory().total
+total_memory_gb = round(virtual_mem / (1024 ** 3))  # 四舍五入为整数 GB
+memory_label.configure(text=f"🧠 内存容量: {total_memory_gb} GB")
 
 # 获取磁盘信息
 disk_text_lines = []
