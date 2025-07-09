@@ -68,6 +68,8 @@ ctk.set_default_color_theme("blue")
 app = ctk.CTk()
 app.title(get_app_metadata())
 app.geometry("420x400")
+app.minsize(420, 400)           # 设置最小尺寸，防止缩得更小
+app.resizable(True, True)     # 禁止变小但允许放大
 
 # 界面元素
 title_label = ctk.CTkLabel(app, text="📡 本地网络信息", font=("Arial", 20))
