@@ -16,9 +16,14 @@ uv run main.py
 
 ```bash
 uv pip install pyinstaller
-pyinstaller --clean --add-data "pyproject.toml;." --noconsole --onefile ./src/main.py
+pyinstaller --clean --add-data "pyproject.toml;." --add-data "src/assets;assets" --noconsole --onefile ./src/main.py
+pyinstaller ./main.spec
 ```
 
 ## 本地网络信息查询器
 
 ![Logo](images/preview.jpg)
+
+## 赞赏/打赏
+
+![Logo](images/donation.jpg)

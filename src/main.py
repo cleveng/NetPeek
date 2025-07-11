@@ -1,203 +1,49 @@
+import customtkinter as ctk
 import os
 import sys
-import threading
-
-import customtkinter as ctk
-import socket
-import uuid
-import psutil
-import platform
-import pyperclip
 import tomllib
-import requests
-from tkinter import messagebox
-import webbrowser
-
-def open_url():
-  webbrowser.open("https://github.com/cleveng/NetPeek")
-
-# 获取公网ip
-def get_public_ip():
-  proxies = {
-    "http": os.environ.get('HTTP_PROXY'),
-    "https": os.environ.get('HTTPS_PROXY')
-  }
-  try:
-    r = requests.get("https://api.ipify.org", proxies=proxies, timeout=5)
-    r.raise_for_status()
-    return r.text
-  except Exception as e:
-    print(f"获取公网 IP 失败: {e}")
-    return "获取失败"
-
-def update_public_ip_label():
-  public_label.configure(text="📡 公网 IP: 正在获取...")
-
-  def worker():
-    ip = get_public_ip()
-    # 回到主线程更新 UI
-    public_label.after(0, lambda: public_label.configure(text=f"📡 公网 IP: {ip}"))
-
-  threading.Thread(target=worker, daemon=True).start()
+from pages.home import HomePage
+from pages.donation import DonationPage
 
 def get_app_metadata():
   try:
-    # 获取当前文件所在目录（兼容 .exe）
-    if getattr(sys, 'frozen', False):  # 打包后
-      base_path = sys._MEIPASS
-    else:  # 脚本执行
-      base_path = os.path.dirname(__file__)
-
+    base_path = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
     pyproject_path = os.path.join(base_path, "pyproject.toml")
-
     with open(pyproject_path, "rb") as f:
       data = tomllib.load(f)
-      name = data["project"]["name"]
-      version = data["project"]["version"]
-      return f"{name} v{version}"
-  except Exception as e:
-    from tkinter import messagebox
-    messagebox.showwarning("读取失败", f"读取 pyproject.toml 失败：\n{e}")
+      return f"{data['project']['name']} v{data['project']['version']}"
+  except Exception:
     return "本地网络信息查询器"
 
-def get_os_info():
-  if platform.system() == "Windows":
-    version, _, build, _ = platform.win32_ver()
-    return f"Windows {version} (Build {build})"
-  else:
-    # Linux/macOS fallback
-    return f"{platform.system()} {platform.release()}"
+class App(ctk.CTk):
+  def __init__(self):
+    super().__init__()
 
-def get_local_ip():
-    for interface, snics in psutil.net_if_addrs().items():
-        for snic in snics:
-            if snic.family == socket.AF_INET and not snic.address.startswith("127."):
-                return snic.address
-    return "无法获取 IP"
+    ctk.set_appearance_mode("System")
+    ctk.set_default_color_theme("blue")
 
-def get_local_ipv6():
-  for interface, snics in psutil.net_if_addrs().items():
-    for snic in snics:
-      if snic.family == socket.AF_INET6 and not snic.address.startswith("::1"):
-        # 去掉 scope_id (%xxxx) 部分（如 fe80::xxxx%eth0）
-        return snic.address.split('%')[0]
-  return "-"
+    self.title(get_app_metadata())
+    self.geometry("420x400")
+    self.minsize(420, 400)
+    self.resizable(True, True)
 
-def get_mac_address():
-    mac = uuid.getnode()
-    if (mac >> 40) % 2:
-        return "MAC 地址可能是虚拟的或无效"
-    return ':'.join(f'{(mac >> i) & 0xff:02x}' for i in range(40, -1, -8)).upper()
+    container = ctk.CTkFrame(self, fg_color="transparent")
+    container.pack(fill="both", expand=True)
+    container.grid_rowconfigure(0, weight=1)
+    container.grid_columnconfigure(0, weight=1)
 
-def refresh_info():
-    # 获取公网ip地址
-    update_public_ip_label()
+    self.pages = {}
 
-    global current_ip, current_mac
-    current_ip = get_local_ip()
-    current_mac = get_mac_address()
-    os_info = get_os_info()
-    current_ipv6 = get_local_ipv6()
+    for PageClass in (HomePage, DonationPage):  # 未来可以加更多页面
+      frame = PageClass(container, self)
+      self.pages[PageClass.__name__] = frame
+      frame.grid(row=0, column=0, sticky="nsew")
 
-    ip_label.configure(text=f"🌐 内网 IP: {current_ip}")
-    mac_label.configure(text=f"🔑 MAC 地址: {current_mac}")
-    os_label.configure(text=f"🖥️ 操作系统: {os_info}")
-    ipv6_label.configure(text=f"🌀 内网 IPv6: {current_ipv6}")
+    self.show_page("HomePage")
 
-def copy_mac():
-    if current_mac and "无效" not in current_mac:
-        pyperclip.copy(current_mac)
-        messagebox.showinfo("已复制", f"已复制 MAC 地址：{current_mac}")
-    else:
-        messagebox.showwarning("复制失败", "当前 MAC 地址不可用")
+  def show_page(self, name):
+    self.pages[name].tkraise()
 
-# 设置 UI 风格
-ctk.set_appearance_mode("System")  # 可选: "Dark" / "Light"
-ctk.set_default_color_theme("blue")
 
-# 主窗口
-app = ctk.CTk()
-app.title(get_app_metadata())
-app.geometry("420x400")
-app.minsize(420, 400)           # 设置最小尺寸，防止缩得更小
-app.resizable(True, True)     # 禁止变小但允许放大
-
-# 界面元素
-title_label = ctk.CTkLabel(app, text="📡 本地网络信息", font=("Arial", 20))
-title_label.pack(pady=12)
-
-# 操作系统
-os_label = ctk.CTkLabel(app, text="")
-os_label.pack(pady=4)
-
-# 公网 IP
-public_label = ctk.CTkLabel(app, text="")
-public_label.pack(pady=4)
-
-# 局域网地址
-ip_label = ctk.CTkLabel(app, text="")
-ip_label.pack(pady=4)
-
-# ⬅️ 新增 IPv6 标签
-ipv6_label = ctk.CTkLabel(app, text="")
-ipv6_label.pack(pady=4)
-
-# mac地址
-mac_label = ctk.CTkLabel(app, text="")
-mac_label.pack(pady=4)
-
-# 内存大小
-memory_label = ctk.CTkLabel(app, text="")
-memory_label.pack(pady=4)
-
-# 磁盘大小
-disk_label = ctk.CTkLabel(app, text="", justify="left")
-disk_label.pack(pady=4)
-
-# 获取内存信息
-virtual_mem = psutil.virtual_memory().total
-total_memory_gb = round(virtual_mem / (1024 ** 3))  # 四舍五入为整数 GB
-memory_label.configure(text=f"🧠 内存容量: {total_memory_gb} GB")
-
-link_button = ctk.CTkButton(
-  app,
-  text="🔗 项目地址",
-  text_color="blue",
-  fg_color="transparent",
-  hover_color="#eeeeee",
-  cursor="hand2",
-  command=open_url
-)
-link_button.pack(pady=10)
-
-# 获取磁盘信息
-disk_text_lines = []
-for part in psutil.disk_partitions():
-  try:
-    usage = psutil.disk_usage(part.mountpoint)
-    total_gb = usage.total / (1024 ** 3)
-    free_gb = usage.free / (1024 ** 3)
-    disk_text_lines.append(f"💾 {part.device}  {total_gb:.1f} GB / 空闲 {free_gb:.1f} GB")
-  except PermissionError:
-    continue  # 某些系统分区会拒绝访问
-
-disk_label.configure(text="\n".join(disk_text_lines))
-
-# 按钮区域
-button_frame = ctk.CTkFrame(app)
-button_frame.pack(side="bottom", fill="x", pady=10, padx=10)
-
-# 刷新按钮
-refresh_button = ctk.CTkButton(button_frame, text="🔄 刷新", command=refresh_info)
-refresh_button.pack(side="left", expand=True, fill="x", padx=(0, 5))
-
-# 复制按钮
-copy_mac_button = ctk.CTkButton(button_frame, text="📋 复制 MAC", command=copy_mac)
-copy_mac_button.pack(side="left", expand=True, fill="x", padx=(5, 0))
-
-# 初始化变量 & 显示内容
-current_ip = None
-current_mac = None
-refresh_info()
-
-app.mainloop()
+if __name__ == "__main__":
+  App().mainloop()
