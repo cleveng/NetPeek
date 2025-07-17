@@ -7,6 +7,7 @@ import pyperclip
 import threading
 import os
 import requests
+import ipaddress
 from tkinter import messagebox
 
 
@@ -46,14 +47,25 @@ def get_local_ipv6() -> str:
         return snic.address.split('%')[0]
   return "-"
 
+def is_trusted_private_ip(ip: str) -> bool:
+  try:
+    addr = ipaddress.ip_address(ip)
+    # 只允许 192.168.x.x 或 10.x.x.x
+    return (
+      addr.is_private and
+      (ip.startswith("192.168.") or ip.startswith("10."))
+    )
+  except ValueError:
+    return False
 
 def get_local_ip() -> str:
-  for _, snics in psutil.net_if_addrs().items():
+  for iface_name, snics in psutil.net_if_addrs().items():
     for snic in snics:
-      if snic.family == socket.AF_INET and not snic.address.startswith("127."):
-        return snic.address
+      if snic.family == socket.AF_INET:
+        ip = snic.address
+        if is_trusted_private_ip(ip):
+          return ip
   return "无法获取 IP"
-
 
 class HomePage(ctk.CTkFrame):
   def __init__(self, parent, controller):
